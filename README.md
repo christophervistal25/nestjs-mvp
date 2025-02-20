@@ -115,70 +115,7 @@ To use the Swagger UI:
 1. Start the application
 2. Navigate to http://localhost:3000/api/docs in your browser
 3. Explore and test the available endpoints
-
-### Announcements Endpoints
-
-#### Create Announcement
-
 ```
-
-POST /announcements
-
-```
-
-Create a new announcement with scheduling capabilities.
-
-#### Update Announcement
-
-```
-
-PUT /announcements/:id
-
-```
-
-Update an existing announcement's details.
-
-#### Get Announcements
-
-```
-
-GET /announcements
-
-```
-
-Retrieve announcements with optional tenant and status filters.
-
-### CMS Endpoints
-
-#### Create Page
-
-```
-
-POST /cms/pages
-
-```
-
-Create a new static content page.
-
-#### Update Page
-
-```
-
-PUT /cms/pages/:page_id
-
-```
-
-Update an existing CMS page.
-
-#### Get Page
-
-```
-
-GET /cms/pages/:slug
-
-````
-
-Retrieve a CMS page by its slug.
 
 ## Testing
 
@@ -187,8 +124,14 @@ Run the test suite:
 ```bash
 # Unit tests
 npm run test
+```
 
-````
+or
+
+```bash
+# Unit tests
+npm test
+```
 
 ## Database Migrations
 
@@ -217,9 +160,23 @@ src/
 ├── modules/
 │   ├── cms/                # CMS module
 │   │   ├── controllers/
+│   │   │   ├── cms.controller.ts
+│   │   │   └── seo.controller.ts
 │   │   ├── services/
+│   │   │   ├── cms.service.ts
+│   │   │   └── seo.service.ts
 │   │   ├── entities/
-│   │   └── dto/
+│   │   │   ├── cms-page.entity.ts
+│   │   │   └── seo-config.entity.ts
+│   │   ├── dto/
+│   │   │   ├── create-cms-page.dto.ts
+│   │   │   ├── update-cms-page.dto.ts
+│   │   │   ├── create-seo-config.dto.ts
+│   │   │   └── update-seo-config.dto.ts
+│   │   ├── test/
+│   │   │   ├── cms.service.spec.ts
+│   │   │   └── seo.service.spec.ts
+│   │   └── cms.module.ts
 │   └── announcements/      # Announcements module
 │       ├── controllers/
 │       ├── services/
