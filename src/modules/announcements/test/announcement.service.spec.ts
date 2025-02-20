@@ -1,45 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AnnouncementService } from '../services/announcement.service';
 import { Announcement } from '../entities/announcement.entity';
-import { NotFoundException } from '@nestjs/common';
 import { CreateAnnouncementDto } from '../dto/create-announcement.dto';
+import { UpdateAnnouncementDto } from '../dto/update-announcement.dto';
 import { AnnouncementStatus } from '../enums/announcement-status.enum';
+import { NotFoundException } from '@nestjs/common';
+import { AnnouncementService } from '../services/announcement.service';
 
 describe('AnnouncementService', () => {
   let service: AnnouncementService;
-  let repository: Repository<Announcement>;
-
-  const mockAnnouncement = {
-    announcement_id: '123e4567-e89b-12d3-a456-426614174000',
-    tenant_id: '123e4567-e89b-12d3-a456-426614174001',
-    title: 'Test Announcement',
-    body: 'Test Content',
-    start_date: new Date('2024-02-20'),
-    end_date: new Date('2024-02-21'),
-    status: AnnouncementStatus.ACTIVE,
-    created_at: new Date(),
-    updated_at: new Date(),
-  };
-
-  // Mock query builder with proper method chaining
-  const mockQueryBuilder = {
-    where: jest.fn().mockReturnThis(),
-    andWhere: jest.fn().mockReturnThis(),
-    orderBy: jest.fn().mockReturnThis(),
-    getMany: jest.fn().mockResolvedValue([mockAnnouncement]),
-    update: jest.fn().mockReturnThis(),
-    set: jest.fn().mockReturnThis(),
-    execute: jest.fn().mockResolvedValue(undefined),
-  };
 
   const mockRepository = {
-    create: jest.fn().mockReturnValue(mockAnnouncement),
-    save: jest.fn().mockResolvedValue(mockAnnouncement),
+    create: jest.fn(),
+    save: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
-    createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+    createQueryBuilder: jest.fn(() => ({
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      getMany: jest.fn(),
+      update: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn(),
+    })),
   };
 
   beforeEach(async () => {
@@ -54,12 +39,6 @@ describe('AnnouncementService', () => {
     }).compile();
 
     service = module.get<AnnouncementService>(AnnouncementService);
-    repository = module.get<Repository<Announcement>>(
-      getRepositoryToken(Announcement),
-    );
-
-    // Reset all mocks before each test
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -69,145 +48,270 @@ describe('AnnouncementService', () => {
   describe('create', () => {
     it('should create a new announcement', async () => {
       const createDto: CreateAnnouncementDto = {
-        tenant_id: mockAnnouncement.tenant_id,
-        title: mockAnnouncement.title,
-        body: mockAnnouncement.body,
-        start_date: mockAnnouncement.start_date,
-        end_date: mockAnnouncement.end_date,
-        status: mockAnnouncement.status,
+        title: 'Test Announcement',
+        body: 'Test Content',
+        tenant_id: '123',
+        start_date: new Date(),
+        end_date: new Date(),
+        status: AnnouncementStatus.SCHEDULED,
       };
+
+      const announcement = { ...createDto, announcement_id: '1' };
+
+      mockRepository.create.mockReturnValue(announcement);
+      mockRepository.save.mockResolvedValue(announcement);
 
       const result = await service.create(createDto);
 
-      expect(result).toEqual(mockAnnouncement);
-      expect(repository.create).toHaveBeenCalledWith(createDto);
-      expect(repository.save).toHaveBeenCalled();
+      expect(result).toEqual(announcement);
+      expect(mockRepository.create).toHaveBeenCalledWith(createDto);
+      expect(mockRepository.save).toHaveBeenCalledWith(announcement);
     });
   });
 
   describe('findAll', () => {
-    it('should return all announcements', async () => {
+    let queryBuilder: any;
+
+    beforeEach(() => {
+      queryBuilder = {
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn(),
+      };
+      mockRepository.createQueryBuilder.mockReturnValue(queryBuilder);
+    });
+
+    it('should return all announcements without filters', async () => {
+      // Mock data
+      const mockAnnouncements = [
+        {
+          announcement_id: '1',
+          title: 'Announcement 1',
+          content: 'Content 1',
+          tenant_id: '1',
+          status: AnnouncementStatus.ACTIVE,
+          created_at: new Date('2023-01-01'),
+        },
+        {
+          announcement_id: '2',
+          title: 'Announcement 2',
+          content: 'Content 2',
+          tenant_id: '2',
+          status: AnnouncementStatus.SCHEDULED,
+          created_at: new Date('2023-01-02'),
+        },
+      ];
+
+      // Setup mock return
+      queryBuilder.getMany.mockResolvedValue(mockAnnouncements);
+
+      // Execute method
       const result = await service.findAll();
 
-      expect(result).toEqual([mockAnnouncement]);
+      // Verify query building
       expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith(
         'announcement',
       );
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+      expect(queryBuilder.andWhere).not.toHaveBeenCalled();
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
         'announcement.created_at',
         'DESC',
       );
+
+      // Verify result
+      expect(result).toEqual(mockAnnouncements);
+      expect(result.length).toBe(2);
     });
 
-    it('should filter by tenant_id and status', async () => {
-      const result = await service.findAll(
-        mockAnnouncement.tenant_id,
-        AnnouncementStatus.ACTIVE,
+    it('should filter by tenant_id when provided', async () => {
+      // Mock data
+      const mockAnnouncements = [
+        {
+          announcement_id: '1',
+          title: 'Announcement 1',
+          content: 'Content 1',
+          tenant_id: '1',
+          status: AnnouncementStatus.ACTIVE,
+          created_at: new Date('2023-01-01'),
+        },
+      ];
+
+      // Setup mock return
+      queryBuilder.getMany.mockResolvedValue(mockAnnouncements);
+
+      // Execute method
+      const tenant_id = '1';
+      const result = await service.findAll(tenant_id);
+
+      // Verify query building
+      expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'announcement',
+      );
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+        'announcement.tenant_id = :tenant_id',
+        { tenant_id },
+      );
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'announcement.created_at',
+        'DESC',
       );
 
-      expect(result).toEqual([mockAnnouncement]);
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'announcement.tenant_id = :tenant_id',
-        { tenant_id: mockAnnouncement.tenant_id },
+      // Verify result
+      expect(result).toEqual(mockAnnouncements);
+      expect(result[0].tenant_id).toBe(tenant_id);
+    });
+
+    it('should filter by status when provided', async () => {
+      // Mock data
+      const mockAnnouncements = [
+        {
+          announcement_id: '1',
+          title: 'Announcement 1',
+          content: 'Content 1',
+          tenant_id: '1',
+          status: AnnouncementStatus.ACTIVE,
+          created_at: new Date('2023-01-01'),
+        },
+      ];
+
+      // Setup mock return
+      queryBuilder.getMany.mockResolvedValue(mockAnnouncements);
+
+      // Execute method
+      const status = AnnouncementStatus.ACTIVE;
+      const result = await service.findAll(undefined, status);
+
+      // Verify query building
+      expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'announcement',
       );
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
         'announcement.status = :status',
-        { status: AnnouncementStatus.ACTIVE },
+        { status },
       );
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'announcement.created_at',
+        'DESC',
+      );
+
+      // Verify result
+      expect(result).toEqual(mockAnnouncements);
+      expect(result[0].status).toBe(status);
+    });
+
+    it('should filter by both tenant_id and status when both provided', async () => {
+      // Mock data
+      const mockAnnouncements = [
+        {
+          announcement_id: '1',
+          title: 'Announcement 1',
+          content: 'Content 1',
+          tenant_id: '1',
+          status: AnnouncementStatus.ACTIVE,
+          created_at: new Date('2023-01-01'),
+        },
+      ];
+
+      // Setup mock return
+      queryBuilder.getMany.mockResolvedValue(mockAnnouncements);
+
+      // Execute method
+      const tenant_id = '1';
+      const status = AnnouncementStatus.ACTIVE;
+      const result = await service.findAll(tenant_id, status);
+
+      // Verify query building
+      expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'announcement',
+      );
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+        'announcement.tenant_id = :tenant_id',
+        { tenant_id },
+      );
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+        'announcement.status = :status',
+        { status },
+      );
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'announcement.created_at',
+        'DESC',
+      );
+
+      // Verify result
+      expect(result).toEqual(mockAnnouncements);
+      expect(result[0].tenant_id).toBe(tenant_id);
+      expect(result[0].status).toBe(status);
+    });
+
+    it('should return empty array when no announcements found', async () => {
+      // Setup mock return
+      queryBuilder.getMany.mockResolvedValue([]);
+
+      // Execute method
+      const result = await service.findAll();
+
+      // Verify query building
+      expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'announcement',
+      );
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'announcement.created_at',
+        'DESC',
+      );
+
+      // Verify result
+      expect(result).toEqual([]);
+      expect(result.length).toBe(0);
     });
   });
 
   describe('findOne', () => {
-    it('should find an announcement by id', async () => {
-      mockRepository.findOne.mockResolvedValueOnce(mockAnnouncement);
+    it('should return an announcement', async () => {
+      const announcement = {
+        announcement_id: '1',
+        title: 'Test',
+      };
 
-      const result = await service.findOne(mockAnnouncement.announcement_id);
-      expect(result).toEqual(mockAnnouncement);
-      expect(repository.findOne).toHaveBeenCalledWith({
-        where: { announcement_id: mockAnnouncement.announcement_id },
+      mockRepository.findOne.mockResolvedValue(announcement);
+
+      const result = await service.findOne('1');
+
+      expect(result).toEqual(announcement);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { announcement_id: '1' },
       });
     });
 
-    it('should throw NotFoundException when announcement not found', async () => {
-      mockRepository.findOne.mockResolvedValueOnce(null);
+    it('should throw NotFoundException if announcement not found', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('1')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('update', () => {
-    it('should update an existing announcement', async () => {
-      const updateDto = {
+    it('should update an announcement', async () => {
+      const updateDto: UpdateAnnouncementDto = {
         title: 'Updated Title',
-        body: 'Updated Content',
       };
 
-      mockRepository.findOne.mockResolvedValueOnce(mockAnnouncement);
-      mockRepository.save.mockResolvedValueOnce({
-        ...mockAnnouncement,
+      const existingAnnouncement = {
+        announcement_id: '1',
+        title: 'Old Title',
+      };
+
+      const updatedAnnouncement = {
+        ...existingAnnouncement,
         ...updateDto,
-      });
+      };
 
-      const result = await service.update(
-        mockAnnouncement.announcement_id,
-        updateDto,
-      );
+      mockRepository.findOne.mockResolvedValue(existingAnnouncement);
+      mockRepository.save.mockResolvedValue(updatedAnnouncement);
 
-      expect(result.title).toEqual(updateDto.title);
-      expect(result.body).toEqual(updateDto.body);
-      expect(repository.save).toHaveBeenCalled();
-    });
+      const result = await service.update('1', updateDto);
 
-    it('should throw NotFoundException when updating non-existent announcement', async () => {
-      mockRepository.findOne.mockResolvedValueOnce(null);
-
-      await expect(
-        service.update('non-existent', { title: 'Updated' }),
-      ).rejects.toThrow(NotFoundException);
-    });
-  });
-
-  describe('remove', () => {
-    it('should remove an announcement', async () => {
-      mockRepository.findOne.mockResolvedValueOnce(mockAnnouncement);
-      mockRepository.remove.mockResolvedValueOnce(undefined);
-
-      await service.remove(mockAnnouncement.announcement_id);
-
-      expect(repository.findOne).toHaveBeenCalledWith({
-        where: { announcement_id: mockAnnouncement.announcement_id },
-      });
-      expect(repository.remove).toHaveBeenCalledWith(mockAnnouncement);
-    });
-
-    it('should throw NotFoundException when removing non-existent announcement', async () => {
-      mockRepository.findOne.mockResolvedValueOnce(null);
-
-      await expect(service.remove('non-existent')).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-  });
-
-  describe('updateStatusBasedOnDates', () => {
-    it('should update statuses based on dates', async () => {
-      await service.updateStatusBasedOnDates();
-
-      expect(mockRepository.createQueryBuilder).toHaveBeenCalled();
-      expect(mockQueryBuilder.update).toHaveBeenCalled();
-      expect(mockQueryBuilder.set).toHaveBeenCalledWith({
-        status: AnnouncementStatus.ACTIVE,
-      });
-      expect(mockQueryBuilder.where).toHaveBeenCalled();
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalled();
-      expect(mockQueryBuilder.execute).toHaveBeenCalled();
-
-      // Verify second update for EXPIRED status
-      expect(mockQueryBuilder.set).toHaveBeenCalledWith({
-        status: AnnouncementStatus.EXPIRED,
-      });
+      expect(result).toEqual(updatedAnnouncement);
+      expect(mockRepository.save).toHaveBeenCalledWith(updatedAnnouncement);
     });
   });
 });

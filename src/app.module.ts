@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CmsModule } from './modules/cms/cms.module';
 import { AnnouncementModule } from './modules/announcements/announcement.module';
+import { MockModule } from './mocks/mock.module';
 import 'crypto';
 
 @Module({
@@ -33,6 +34,7 @@ import 'crypto';
     }),
     CmsModule,
     AnnouncementModule,
+    MockModule,
   ],
   controllers: [AppController],
   providers: [AppService],
