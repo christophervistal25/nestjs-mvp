@@ -1,0 +1,34 @@
+Prosperity Public License 3.0.0
+
+Copyright (c) 2024 Christopher Vistal
+
+Source Code: https://github.com/christophervistal25/mvp-app
+
+This license lets you use and share this software for free, with a few conditions:
+
+You must follow the terms of this license if you do, or prepare to do, any of the following:
+* run this software to operate your computer, in whole or in part
+* make changes to this software
+* build this software as a dependency into your own software
+
+As far as the law allows, this software comes as is, without any warranty or condition, and the contributor will not be liable to anyone for any damages related to this software or this license, under any kind of legal claim.
+
+Limits
+---------
+
+You may not commercially use this software.
+
+Commercial use includes using the software:
+* running the software in production to serve a commercial purpose
+* distributing the software as part of a commercial product or service
+* using the software in development or testing of a commercial product or service
+* using the software to provide services to commercial entities
+* using the software to generate revenue directly or indirectly
+
+You may not make any technical use of this software unless:
+
+You contribute back all your changes and additions to this software, as bug reports, pull requests, or similar kinds of contribution
+You license your changes and additions on the terms of this license
+You keep all copyright notices in the software intact
+
+Your contributions will be licensed on the same terms as this license when you submit them.
