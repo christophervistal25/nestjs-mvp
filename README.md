@@ -233,7 +233,3 @@ To inquire about commercial licensing, please:
 3. Include details about your intended use case
 
 All commercial inquiries will be handled on a case-by-case basis.
-
-```
-
-```
