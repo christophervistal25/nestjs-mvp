@@ -1,9 +1,0 @@
-/**
- * Copyright (c) 2024 [Your Name/Organization]
- * 
- * This source code is licensed under the Prosperity Public License 3.0.0.
- * License text: https://prosperitylicense.com/
- * 
- * Change notice: Any modifications to this file must be kept under the same
- * license terms and conditions.
- */

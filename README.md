@@ -19,8 +19,6 @@
     <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
   <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
 # MVP Application - CMS and Announcements Service
 
@@ -50,7 +48,7 @@ This is a NestJS-based REST API service that manages tenant-specific and global 
 - **Framework**: NestJS (TypeScript)
 - **Database**: PostgreSQL
 - **ORM**: TypeORM
-- **Documentation**: Swagger/OpenAPI
+- **Documentation**: Swagger
 - **Container**: Docker
 - **Testing**: Jest
 
@@ -106,56 +104,50 @@ npm run start:prod
 
 ## API Documentation
 
+### Swagger Documentation
+
+The API documentation is available through Swagger UI at:
+
+http://localhost:3000/api
+
+To use the Swagger UI:
+
+1. Start the application
+2. Navigate to http://localhost:3000/api in your browser
+3. Explore and test the available endpoints
+
 ### Announcements Endpoints
 
 #### Create Announcement
 
-```
-POST /announcements
-```
-
+`POST /announcements`
 Create a new announcement with scheduling capabilities.
 
 #### Update Announcement
 
-```
-PUT /announcements/:id
-```
-
+`PUT /announcements/:id`
 Update an existing announcement's details.
 
 #### Get Announcements
 
-```
-GET /announcements
-```
-
+`GET /announcements`
 Retrieve announcements with optional tenant and status filters.
 
 ### CMS Endpoints
 
 #### Create Page
 
-```
-POST /cms/pages
-```
-
+`POST /cms/pages`
 Create a new static content page.
 
 #### Update Page
 
-```
-PUT /cms/pages/:page_id
-```
-
+`PUT /cms/pages/:page_id`
 Update an existing CMS page.
 
 #### Get Page
 
-```
-GET /cms/pages/:slug
-```
-
+`GET /cms/pages/:slug`
 Retrieve a CMS page by its slug.
 
 ## Testing
@@ -237,7 +229,11 @@ For commercial use of this software, please contact the author to obtain a comme
 To inquire about commercial licensing, please:
 
 1. Open an issue in the repository with the label "commercial-license"
-2. Send an email to [your-email@example.com]
+2. Send an email to [christophervistal25@gmail.com]
 3. Include details about your intended use case
 
 All commercial inquiries will be handled on a case-by-case basis.
+
+```
+
+```
